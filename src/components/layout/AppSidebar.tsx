@@ -29,6 +29,8 @@ interface NavSection {
   id: string;
   label: string;
   icon: React.ElementType;
+  color: string;
+  bgColor: string;
   items: NavItem[];
 }
 
@@ -37,6 +39,8 @@ const navigation: NavSection[] = [
     id: 'issues',
     label: 'Issues',
     icon: AlertCircle,
+    color: 'text-rose-500',
+    bgColor: 'bg-rose-500/10 hover:bg-rose-500/20',
     items: [
       { title: 'Feed', url: '/', icon: Activity },
       { title: 'AI Incidents', url: '/incidents', icon: AlertTriangle },
@@ -47,6 +51,8 @@ const navigation: NavSection[] = [
     id: 'explore',
     label: 'Explore',
     icon: Search,
+    color: 'text-violet-500',
+    bgColor: 'bg-violet-500/10 hover:bg-violet-500/20',
     items: [
       { title: 'Agent Traces', url: '/traces', icon: Activity },
       { title: 'Decision Logs', url: '/decisions', icon: BookOpen },
@@ -56,6 +62,8 @@ const navigation: NavSection[] = [
     id: 'dashboards',
     label: 'Dashboards',
     icon: LayoutDashboard,
+    color: 'text-sky-500',
+    bgColor: 'bg-sky-500/10 hover:bg-sky-500/20',
     items: [
       { title: 'Reliability', url: '/dashboard/reliability', icon: TrendingUp },
       { title: 'Risk', url: '/dashboard/risk', icon: AlertTriangle },
@@ -65,6 +73,8 @@ const navigation: NavSection[] = [
     id: 'insights',
     label: 'Insights',
     icon: Lightbulb,
+    color: 'text-amber-500',
+    bgColor: 'bg-amber-500/10 hover:bg-amber-500/20',
     items: [
       { title: 'Failure Types', url: '/insights/failures', icon: AlertCircle },
       { title: 'Drift Signals', url: '/insights/drift', icon: TrendingUp },
@@ -74,6 +84,8 @@ const navigation: NavSection[] = [
     id: 'prevent',
     label: 'Prevent',
     icon: Shield,
+    color: 'text-emerald-500',
+    bgColor: 'bg-emerald-500/10 hover:bg-emerald-500/20',
     items: [
       { title: 'AI Policies', url: '/policies', icon: FileText },
       { title: 'Guardrails', url: '/guardrails', icon: Shield },
@@ -83,6 +95,8 @@ const navigation: NavSection[] = [
     id: 'settings',
     label: 'Settings',
     icon: Settings,
+    color: 'text-slate-500',
+    bgColor: 'bg-slate-500/10 hover:bg-slate-500/20',
     items: [
       { title: 'Organization', url: '/settings', icon: Settings },
       { title: 'Models & Prompts', url: '/settings/models', icon: Bot },
@@ -98,7 +112,6 @@ export function AppSidebar() {
 
   // Which section is currently pinned (clicked)
   const [pinnedSection, setPinnedSection] = useState<string | null>(() => {
-    // Default to the section that contains the current route
     for (const section of navigation) {
       if (section.items.some((item) => item.url === currentPath)) {
         return section.id;
@@ -113,6 +126,9 @@ export function AppSidebar() {
   // The active section to display in the submenu
   const activeSection = hoveredSection || pinnedSection;
   const activeSectionData = navigation.find((s) => s.id === activeSection);
+
+  // Show submenu panel
+  const showSubmenu = activeSection !== null;
 
   const handleIconClick = (sectionId: string) => {
     setPinnedSection(sectionId);
@@ -136,16 +152,16 @@ export function AppSidebar() {
   return (
     <div className="flex h-full">
       {/* Icon Rail - Always visible */}
-      <div className="flex w-16 flex-col border-r border-sidebar-border bg-sidebar">
+      <div className="flex w-[72px] flex-col border-r border-sidebar-border bg-sidebar">
         {/* Logo */}
-        <div className="flex h-14 items-center justify-center border-b border-sidebar-border">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <Shield className="h-5 w-5 text-primary-foreground" />
+        <div className="flex h-16 items-center justify-center border-b border-sidebar-border">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/25">
+            <Shield className="h-6 w-6 text-primary-foreground" />
           </div>
         </div>
 
         {/* Navigation Icons */}
-        <nav className="flex flex-1 flex-col gap-1 p-2">
+        <nav className="flex flex-1 flex-col gap-2 p-3">
           {navigation.map((section) => {
             const isActive = isActiveSection(section);
             const isPinned = pinnedSection === section.id;
@@ -158,37 +174,67 @@ export function AppSidebar() {
                 onMouseEnter={() => handleIconMouseEnter(section.id)}
                 onMouseLeave={handleIconMouseLeave}
                 className={cn(
-                  'group relative flex h-10 w-full items-center justify-center rounded-lg transition-colors',
+                  'group relative flex h-12 w-full items-center justify-center rounded-xl transition-all duration-200',
                   isPinned
-                    ? 'bg-primary text-primary-foreground'
+                    ? cn(section.bgColor, section.color, 'ring-2 ring-offset-2 ring-offset-sidebar', `ring-current`)
                     : isHovered
-                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                    ? cn(section.bgColor, section.color)
                     : isActive
-                    ? 'bg-sidebar-accent/50 text-foreground'
-                    : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                    ? cn(section.bgColor, section.color, 'opacity-70')
+                    : cn('text-muted-foreground hover:text-foreground', section.bgColor)
                 )}
                 title={section.label}
               >
-                <section.icon className="h-5 w-5" />
-                {/* Active indicator */}
+                <section.icon className={cn(
+                  'h-6 w-6 transition-transform duration-200',
+                  (isPinned || isHovered) && 'scale-110'
+                )} />
+                
+                {/* Active indicator bar */}
                 {isPinned && (
-                  <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-primary-foreground" />
+                  <span 
+                    className={cn(
+                      'absolute -left-3 top-1/2 h-8 w-1.5 -translate-y-1/2 rounded-r-full transition-all duration-200',
+                      section.color.replace('text-', 'bg-')
+                    )} 
+                  />
                 )}
+
+                {/* Label tooltip on hover */}
+                <span className={cn(
+                  'absolute left-full ml-3 whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium opacity-0 transition-all duration-200 pointer-events-none',
+                  'bg-foreground text-background',
+                  'group-hover:opacity-100 group-hover:translate-x-0 -translate-x-2'
+                )}>
+                  {section.label}
+                </span>
               </button>
             );
           })}
         </nav>
       </div>
 
-      {/* Submenu Panel - Always visible, shows active section */}
-      <div className="flex w-48 flex-col border-r border-sidebar-border bg-sidebar">
+      {/* Submenu Panel - Slides in */}
+      <div 
+        className={cn(
+          'flex flex-col border-r border-sidebar-border bg-sidebar overflow-hidden transition-all duration-300 ease-out',
+          showSubmenu ? 'w-52 opacity-100' : 'w-0 opacity-0'
+        )}
+      >
         {/* Section Header */}
-        <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4">
-          <span className="text-sm font-semibold text-foreground">
-            {activeSectionData?.label}
-          </span>
+        <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
+          <div className="flex items-center gap-2">
+            {activeSectionData && (
+              <>
+                <activeSectionData.icon className={cn('h-5 w-5', activeSectionData.color)} />
+                <span className="text-sm font-semibold text-foreground">
+                  {activeSectionData.label}
+                </span>
+              </>
+            )}
+          </div>
           <button
-            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             title="Collapse"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -196,18 +242,28 @@ export function AppSidebar() {
         </div>
 
         {/* Section Items */}
-        <nav className="flex-1 overflow-y-auto p-2">
-          {activeSectionData?.items.map((item) => (
-            <NavLink
-              key={item.url}
-              to={item.url}
-              end={item.url === '/'}
-              className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-              activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium border-l-2 border-primary"
-            >
-              <span>{item.title}</span>
-            </NavLink>
-          ))}
+        <nav className="flex-1 overflow-y-auto p-3">
+          <div className="space-y-1">
+            {activeSectionData?.items.map((item, index) => (
+              <NavLink
+                key={item.url}
+                to={item.url}
+                end={item.url === '/'}
+                className={cn(
+                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition-all duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:translate-x-1',
+                  'opacity-0 animate-fade-in'
+                )}
+                style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'forwards' }}
+                activeClassName={cn(
+                  'bg-sidebar-accent text-sidebar-accent-foreground font-medium',
+                  activeSectionData && `border-l-2 ${activeSectionData.color.replace('text-', 'border-')}`
+                )}
+              >
+                <item.icon className="h-4 w-4" />
+                <span>{item.title}</span>
+              </NavLink>
+            ))}
+          </div>
         </nav>
       </div>
     </div>
