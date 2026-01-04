@@ -244,25 +244,21 @@ export function AppSidebar() {
         {/* Section Items */}
         <nav className="flex-1 overflow-y-auto p-3">
           <div className="space-y-1">
-            {activeSectionData?.items.map((item, index) => (
-              <NavLink
-                key={item.url}
-                to={item.url}
-                end={item.url === '/'}
-                className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition-all duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:translate-x-1',
-                  'opacity-0 animate-fade-in'
-                )}
-                style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'forwards' }}
-                activeClassName={cn(
-                  'bg-sidebar-accent text-sidebar-accent-foreground font-medium',
-                  activeSectionData && `border-l-2 ${activeSectionData.color.replace('text-', 'border-')}`
-                )}
-              >
-                <item.icon className="h-4 w-4" />
-                <span>{item.title}</span>
-              </NavLink>
-            ))}
+            {activeSectionData?.items.map((item, index) => {
+              const ItemIcon = item.icon;
+              return (
+                <NavLink
+                  key={item.url}
+                  to={item.url}
+                  end={item.url === '/'}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition-all duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:translate-x-1"
+                  activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium border-l-2 border-primary"
+                >
+                  <ItemIcon className="h-4 w-4" />
+                  <span>{item.title}</span>
+                </NavLink>
+              );
+            })}
           </div>
         </nav>
       </div>
