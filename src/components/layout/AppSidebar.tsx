@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { NavLink } from '@/components/NavLink';
 import {
@@ -28,6 +28,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import {
   Collapsible,
@@ -101,100 +102,120 @@ const navigation: NavSection[] = [
 ];
 
 export function AppSidebar() {
-  const [isPinned, setIsPinned] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+  const { open, setOpen, isMobile } = useSidebar();
+  const [isPinned, setIsPinned] = useState(open);
+  const [isHovering, setIsHovering] = useState(false);
+
   const location = useLocation();
   const currentPath = location.pathname;
 
-  const expanded = isPinned || isHovered;
+  // If the user expands/collapses via the global SidebarTrigger, treat that as a pin/unpin.
+  useEffect(() => {
+    if (isMobile) return;
+
+    if (open && !isHovering && !isPinned) setIsPinned(true);
+    if (!open && isPinned) setIsPinned(false);
+  }, [open, isHovering, isPinned, isMobile]);
+
+  const expanded = open;
 
   const isActiveSection = (section: NavSection) => {
     return section.items.some(item => currentPath === item.url);
   };
 
   const handlePin = () => {
-    setIsPinned(!isPinned);
+    const nextPinned = !isPinned;
+    setIsPinned(nextPinned);
+    setOpen(nextPinned);
   };
 
   return (
-    <Sidebar 
-      className={cn(
-        'border-r border-sidebar-border transition-all duration-200',
-        expanded ? 'w-60' : 'w-14'
-      )}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <SidebarHeader className="border-b border-sidebar-border p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary flex-shrink-0">
-              <Shield className="h-4 w-4 text-primary-foreground" />
+    <Sidebar collapsible="icon" className={cn('border-r border-sidebar-border')}>
+      <div
+        className="flex h-full w-full flex-col"
+        onMouseEnter={() => {
+          if (isMobile) return;
+          setIsHovering(true);
+          if (!isPinned) setOpen(true);
+        }}
+        onMouseLeave={() => {
+          if (isMobile) return;
+          setIsHovering(false);
+          if (!isPinned) setOpen(false);
+        }}
+      >
+        <SidebarHeader className="border-b border-sidebar-border p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-primary">
+                <Shield className="h-4 w-4 text-primary-foreground" />
+              </div>
+              {expanded && (
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold text-foreground">SAMIX AI</span>
+                  <span className="text-xs text-muted-foreground">Governance Platform</span>
+                </div>
+              )}
             </div>
             {expanded && (
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold text-foreground">SAMIX AI</span>
-                <span className="text-xs text-muted-foreground">Governance Platform</span>
-              </div>
+              <button
+                onClick={handlePin}
+                className={cn(
+                  'rounded-md p-1.5 transition-colors',
+                  isPinned
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                )}
+                title={isPinned ? 'Unpin sidebar' : 'Pin sidebar'}
+                aria-label={isPinned ? 'Unpin sidebar' : 'Pin sidebar'}
+              >
+                <Pin className={cn('h-4 w-4', isPinned && 'rotate-45')} />
+              </button>
             )}
           </div>
-          {expanded && (
-            <button
-              onClick={handlePin}
-              className={cn(
-                'p-1.5 rounded-md transition-colors',
-                isPinned 
-                  ? 'bg-primary text-primary-foreground' 
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              )}
-              title={isPinned ? 'Unpin sidebar' : 'Pin sidebar'}
-            >
-              <Pin className={cn('h-4 w-4', isPinned && 'rotate-45')} />
-            </button>
-          )}
-        </div>
-      </SidebarHeader>
+        </SidebarHeader>
 
-      <SidebarContent className="px-2 py-2">
-        {navigation.map((section) => (
-          <SidebarGroup key={section.label}>
-            <Collapsible defaultOpen={isActiveSection(section)} className="group/collapsible">
-              <CollapsibleTrigger asChild>
-                <SidebarGroupLabel className="flex cursor-pointer items-center justify-between px-2 py-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground hover:text-foreground">
-                  <div className="flex items-center gap-2">
-                    <section.icon className="h-4 w-4 flex-shrink-0" />
-                    {expanded && <span>{section.label}</span>}
-                  </div>
-                  {expanded && (
-                    <ChevronDown className="h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-180" />
-                  )}
-                </SidebarGroupLabel>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {section.items.map((item) => (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton asChild>
-                          <NavLink
-                            to={item.url}
-                            end={item.url === '/'}
-                            className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                            activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                          >
-                            <item.icon className="h-4 w-4 flex-shrink-0" />
-                            {expanded && <span>{item.title}</span>}
-                          </NavLink>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </CollapsibleContent>
-            </Collapsible>
-          </SidebarGroup>
-        ))}
-      </SidebarContent>
+        <SidebarContent className="px-2 py-2">
+          {navigation.map((section) => (
+            <SidebarGroup key={section.label}>
+              <Collapsible defaultOpen={isActiveSection(section)} className="group/collapsible">
+                <CollapsibleTrigger asChild>
+                  <SidebarGroupLabel className="flex cursor-pointer items-center justify-between px-2 py-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground hover:text-foreground">
+                    <div className="flex items-center gap-2">
+                      <section.icon className="h-4 w-4 flex-shrink-0" />
+                      {expanded && <span>{section.label}</span>}
+                    </div>
+                    {expanded && (
+                      <ChevronDown className="h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                    )}
+                  </SidebarGroupLabel>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      {section.items.map((item) => (
+                        <SidebarMenuItem key={item.title}>
+                          <SidebarMenuButton asChild>
+                            <NavLink
+                              to={item.url}
+                              end={item.url === '/'}
+                              className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                              activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                            >
+                              <item.icon className="h-4 w-4 flex-shrink-0" />
+                              {expanded && <span>{item.title}</span>}
+                            </NavLink>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      ))}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </CollapsibleContent>
+              </Collapsible>
+            </SidebarGroup>
+          ))}
+        </SidebarContent>
+      </div>
     </Sidebar>
   );
 }
