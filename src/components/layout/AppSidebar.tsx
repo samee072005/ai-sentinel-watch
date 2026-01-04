@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { NavLink } from '@/components/NavLink';
 import {
@@ -8,7 +8,6 @@ import {
   Lightbulb,
   Shield,
   Settings,
-  ChevronDown,
   Activity,
   FileText,
   TrendingUp,
@@ -16,39 +15,26 @@ import {
   BookOpen,
   Bot,
   ClipboardList,
-  Pin,
+  ChevronLeft,
 } from 'lucide-react';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarHeader,
-  useSidebar,
-} from '@/components/ui/sidebar';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 
+interface NavItem {
+  title: string;
+  url: string;
+  icon: React.ElementType;
+}
+
 interface NavSection {
+  id: string;
   label: string;
   icon: React.ElementType;
-  items: {
-    title: string;
-    url: string;
-    icon: React.ElementType;
-  }[];
+  items: NavItem[];
 }
 
 const navigation: NavSection[] = [
   {
+    id: 'issues',
     label: 'Issues',
     icon: AlertCircle,
     items: [
@@ -58,6 +44,7 @@ const navigation: NavSection[] = [
     ],
   },
   {
+    id: 'explore',
     label: 'Explore',
     icon: Search,
     items: [
@@ -66,6 +53,7 @@ const navigation: NavSection[] = [
     ],
   },
   {
+    id: 'dashboards',
     label: 'Dashboards',
     icon: LayoutDashboard,
     items: [
@@ -74,6 +62,7 @@ const navigation: NavSection[] = [
     ],
   },
   {
+    id: 'insights',
     label: 'Insights',
     icon: Lightbulb,
     items: [
@@ -82,6 +71,7 @@ const navigation: NavSection[] = [
     ],
   },
   {
+    id: 'prevent',
     label: 'Prevent',
     icon: Shield,
     items: [
@@ -90,6 +80,7 @@ const navigation: NavSection[] = [
     ],
   },
   {
+    id: 'settings',
     label: 'Settings',
     icon: Settings,
     items: [
@@ -102,120 +93,123 @@ const navigation: NavSection[] = [
 ];
 
 export function AppSidebar() {
-  const { open, setOpen, isMobile } = useSidebar();
-  const [isPinned, setIsPinned] = useState(open);
-  const [isHovering, setIsHovering] = useState(false);
-
   const location = useLocation();
   const currentPath = location.pathname;
 
-  // If the user expands/collapses via the global SidebarTrigger, treat that as a pin/unpin.
-  useEffect(() => {
-    if (isMobile) return;
+  // Which section is currently pinned (clicked)
+  const [pinnedSection, setPinnedSection] = useState<string | null>(() => {
+    // Default to the section that contains the current route
+    for (const section of navigation) {
+      if (section.items.some((item) => item.url === currentPath)) {
+        return section.id;
+      }
+    }
+    return 'issues';
+  });
 
-    if (open && !isHovering && !isPinned) setIsPinned(true);
-    if (!open && isPinned) setIsPinned(false);
-  }, [open, isHovering, isPinned, isMobile]);
+  // Which section is being hovered (temporary)
+  const [hoveredSection, setHoveredSection] = useState<string | null>(null);
 
-  const expanded = open;
+  // The active section to display in the submenu
+  const activeSection = hoveredSection || pinnedSection;
+  const activeSectionData = navigation.find((s) => s.id === activeSection);
 
-  const isActiveSection = (section: NavSection) => {
-    return section.items.some(item => currentPath === item.url);
+  const handleIconClick = (sectionId: string) => {
+    setPinnedSection(sectionId);
+    setHoveredSection(null);
   };
 
-  const handlePin = () => {
-    const nextPinned = !isPinned;
-    setIsPinned(nextPinned);
-    setOpen(nextPinned);
+  const handleIconMouseEnter = (sectionId: string) => {
+    if (sectionId !== pinnedSection) {
+      setHoveredSection(sectionId);
+    }
+  };
+
+  const handleIconMouseLeave = () => {
+    setHoveredSection(null);
+  };
+
+  const isActiveSection = (section: NavSection) => {
+    return section.items.some((item) => currentPath === item.url);
   };
 
   return (
-    <Sidebar collapsible="icon" className={cn('border-r border-sidebar-border')}>
-      <div
-        className="flex h-full w-full flex-col"
-        onMouseEnter={() => {
-          if (isMobile) return;
-          setIsHovering(true);
-          if (!isPinned) setOpen(true);
-        }}
-        onMouseLeave={() => {
-          if (isMobile) return;
-          setIsHovering(false);
-          if (!isPinned) setOpen(false);
-        }}
-      >
-        <SidebarHeader className="border-b border-sidebar-border p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-primary">
-                <Shield className="h-4 w-4 text-primary-foreground" />
-              </div>
-              {expanded && (
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-foreground">SAMIX AI</span>
-                  <span className="text-xs text-muted-foreground">Governance Platform</span>
-                </div>
-              )}
-            </div>
-            {expanded && (
+    <div className="flex h-full">
+      {/* Icon Rail - Always visible */}
+      <div className="flex w-16 flex-col border-r border-sidebar-border bg-sidebar">
+        {/* Logo */}
+        <div className="flex h-14 items-center justify-center border-b border-sidebar-border">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+            <Shield className="h-5 w-5 text-primary-foreground" />
+          </div>
+        </div>
+
+        {/* Navigation Icons */}
+        <nav className="flex flex-1 flex-col gap-1 p-2">
+          {navigation.map((section) => {
+            const isActive = isActiveSection(section);
+            const isPinned = pinnedSection === section.id;
+            const isHovered = hoveredSection === section.id;
+
+            return (
               <button
-                onClick={handlePin}
+                key={section.id}
+                onClick={() => handleIconClick(section.id)}
+                onMouseEnter={() => handleIconMouseEnter(section.id)}
+                onMouseLeave={handleIconMouseLeave}
                 className={cn(
-                  'rounded-md p-1.5 transition-colors',
+                  'group relative flex h-10 w-full items-center justify-center rounded-lg transition-colors',
                   isPinned
                     ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                    : isHovered
+                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                    : isActive
+                    ? 'bg-sidebar-accent/50 text-foreground'
+                    : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                 )}
-                title={isPinned ? 'Unpin sidebar' : 'Pin sidebar'}
-                aria-label={isPinned ? 'Unpin sidebar' : 'Pin sidebar'}
+                title={section.label}
               >
-                <Pin className={cn('h-4 w-4', isPinned && 'rotate-45')} />
+                <section.icon className="h-5 w-5" />
+                {/* Active indicator */}
+                {isPinned && (
+                  <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-primary-foreground" />
+                )}
               </button>
-            )}
-          </div>
-        </SidebarHeader>
-
-        <SidebarContent className="px-2 py-2">
-          {navigation.map((section) => (
-            <SidebarGroup key={section.label}>
-              <Collapsible defaultOpen={isActiveSection(section)} className="group/collapsible">
-                <CollapsibleTrigger asChild>
-                  <SidebarGroupLabel className="flex cursor-pointer items-center justify-between px-2 py-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground hover:text-foreground">
-                    <div className="flex items-center gap-2">
-                      <section.icon className="h-4 w-4 flex-shrink-0" />
-                      {expanded && <span>{section.label}</span>}
-                    </div>
-                    {expanded && (
-                      <ChevronDown className="h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-180" />
-                    )}
-                  </SidebarGroupLabel>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarGroupContent>
-                    <SidebarMenu>
-                      {section.items.map((item) => (
-                        <SidebarMenuItem key={item.title}>
-                          <SidebarMenuButton asChild>
-                            <NavLink
-                              to={item.url}
-                              end={item.url === '/'}
-                              className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                              activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                            >
-                              <item.icon className="h-4 w-4 flex-shrink-0" />
-                              {expanded && <span>{item.title}</span>}
-                            </NavLink>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      ))}
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </CollapsibleContent>
-              </Collapsible>
-            </SidebarGroup>
-          ))}
-        </SidebarContent>
+            );
+          })}
+        </nav>
       </div>
-    </Sidebar>
+
+      {/* Submenu Panel - Always visible, shows active section */}
+      <div className="flex w-48 flex-col border-r border-sidebar-border bg-sidebar">
+        {/* Section Header */}
+        <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4">
+          <span className="text-sm font-semibold text-foreground">
+            {activeSectionData?.label}
+          </span>
+          <button
+            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+            title="Collapse"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Section Items */}
+        <nav className="flex-1 overflow-y-auto p-2">
+          {activeSectionData?.items.map((item) => (
+            <NavLink
+              key={item.url}
+              to={item.url}
+              end={item.url === '/'}
+              className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium border-l-2 border-primary"
+            >
+              <span>{item.title}</span>
+            </NavLink>
+          ))}
+        </nav>
+      </div>
+    </div>
   );
 }
