@@ -226,6 +226,8 @@ export function AppSidebar() {
           'flex flex-col border-r border-sidebar-border bg-sidebar overflow-hidden transition-all duration-300 ease-out',
           showSubmenu ? 'w-52 opacity-100' : 'w-0 opacity-0'
         )}
+        onMouseEnter={() => hoveredSection && setHoveredSection(hoveredSection)}
+        onMouseLeave={handleIconMouseLeave}
       >
         {/* Section Header */}
         <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
