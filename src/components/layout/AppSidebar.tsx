@@ -262,6 +262,10 @@ export function AppSidebar() {
                     end={item.url === '/'}
                     className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition-all duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:translate-x-1"
                     activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium border-l-2 border-primary"
+                    onClick={() => {
+                      setPinnedSection(activeSectionData.id);
+                      setHoveredSection(null);
+                    }}
                   >
                     <ItemIcon className="h-4 w-4" />
                     <span>{item.title}</span>
