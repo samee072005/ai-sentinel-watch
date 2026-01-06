@@ -242,25 +242,27 @@ export function AppSidebar() {
         </div>
 
         {/* Section Items */}
-        <nav className="flex-1 overflow-y-auto p-3">
-          <div className="space-y-1">
-            {activeSectionData?.items.map((item, index) => {
-              const ItemIcon = item.icon;
-              return (
-                <NavLink
-                  key={item.url}
-                  to={item.url}
-                  end={item.url === '/'}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition-all duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:translate-x-1"
-                  activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium border-l-2 border-primary"
-                >
-                  <ItemIcon className="h-4 w-4" />
-                  <span>{item.title}</span>
-                </NavLink>
-              );
-            })}
-          </div>
-        </nav>
+        {activeSectionData && (
+          <nav key={activeSectionData.id} className="flex-1 overflow-y-auto p-3">
+            <div className="space-y-1">
+              {activeSectionData.items.map((item) => {
+                const ItemIcon = item.icon;
+                return (
+                  <NavLink
+                    key={`${activeSectionData.id}-${item.url}`}
+                    to={item.url}
+                    end={item.url === '/'}
+                    className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition-all duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:translate-x-1"
+                    activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium border-l-2 border-primary"
+                  >
+                    <ItemIcon className="h-4 w-4" />
+                    <span>{item.title}</span>
+                  </NavLink>
+                );
+              })}
+            </div>
+          </nav>
+        )}
       </div>
     </div>
   );
