@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { NavLink } from '@/components/NavLink';
 import {
   AlertCircle,
@@ -108,6 +108,7 @@ const navigation: NavSection[] = [
 
 export function AppSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const currentPath = location.pathname;
 
   // Which section is currently pinned (clicked)
@@ -133,6 +134,11 @@ export function AppSidebar() {
   const handleIconClick = (sectionId: string) => {
     setPinnedSection(sectionId);
     setHoveredSection(null);
+    // Navigate to first page in the section
+    const section = navigation.find((s) => s.id === sectionId);
+    if (section && section.items.length > 0) {
+      navigate(section.items[0].url);
+    }
   };
 
   const handleIconMouseEnter = (sectionId: string) => {
