@@ -142,12 +142,10 @@ export function AppSidebar() {
   };
 
   const handleIconMouseEnter = (sectionId: string) => {
-    if (sectionId !== pinnedSection) {
-      setHoveredSection(sectionId);
-    }
+    setHoveredSection(sectionId);
   };
 
-  const handleIconMouseLeave = () => {
+  const handleSidebarMouseLeave = () => {
     setHoveredSection(null);
   };
 
@@ -156,7 +154,7 @@ export function AppSidebar() {
   };
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full" onMouseLeave={handleSidebarMouseLeave}>
       {/* Icon Rail - Always visible */}
       <div className="flex w-[72px] flex-col border-r border-sidebar-border bg-sidebar">
         {/* Logo */}
@@ -178,7 +176,6 @@ export function AppSidebar() {
                 key={section.id}
                 onClick={() => handleIconClick(section.id)}
                 onMouseEnter={() => handleIconMouseEnter(section.id)}
-                onMouseLeave={handleIconMouseLeave}
                 className={cn(
                   'group relative flex h-12 w-full items-center justify-center rounded-xl transition-all duration-200',
                   isPinned
@@ -224,10 +221,10 @@ export function AppSidebar() {
       <div 
         className={cn(
           'flex flex-col border-r border-sidebar-border bg-sidebar overflow-hidden transition-all duration-300 ease-out',
-          showSubmenu ? 'w-52 opacity-100' : 'w-0 opacity-0'
+          showSubmenu
+            ? 'w-52 opacity-100 translate-x-0'
+            : 'w-0 opacity-0 -translate-x-2 pointer-events-none'
         )}
-        onMouseEnter={() => hoveredSection && setHoveredSection(hoveredSection)}
-        onMouseLeave={handleIconMouseLeave}
       >
         {/* Section Header */}
         <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
