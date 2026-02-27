@@ -111,15 +111,8 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const currentPath = location.pathname;
 
-  // Which section is currently pinned (clicked)
-  const [pinnedSection, setPinnedSection] = useState<string | null>(() => {
-    for (const section of navigation) {
-      if (section.items.some((item) => item.url === currentPath)) {
-        return section.id;
-      }
-    }
-    return 'issues';
-  });
+  // Which section is currently pinned (clicked). Start unpinned so submenu stays closed until user interacts.
+  const [pinnedSection, setPinnedSection] = useState<string | null>(null);
 
   // Which section is being hovered (temporary)
   const [hoveredSection, setHoveredSection] = useState<string | null>(null);
@@ -128,8 +121,8 @@ export function AppSidebar() {
   const activeSection = hoveredSection || pinnedSection;
   const activeSectionData = navigation.find((s) => s.id === activeSection);
 
-  // Show submenu panel
-  const showSubmenu = activeSection !== null;
+  // Show submenu panel only when hovering or when a section is pinned by click
+  const showSubmenu = hoveredSection !== null || pinnedSection !== null;
 
   const handleIconClick = (sectionId: string) => {
     setPinnedSection(sectionId);
@@ -146,6 +139,11 @@ export function AppSidebar() {
   };
 
   const handleSidebarMouseLeave = () => {
+    setHoveredSection(null);
+  };
+
+  const handleCollapseClick = () => {
+    setPinnedSection(null);
     setHoveredSection(null);
   };
 
@@ -239,8 +237,10 @@ export function AppSidebar() {
             )}
           </div>
           <button
+            onClick={handleCollapseClick}
             className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             title="Collapse"
+            aria-label="Collapse sidebar submenu"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
