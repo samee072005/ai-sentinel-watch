@@ -121,8 +121,8 @@ export function AppSidebar() {
   const activeSection = hoveredSection || pinnedSection;
   const activeSectionData = navigation.find((s) => s.id === activeSection);
 
-  // Show submenu panel
-  const showSubmenu = activeSection !== null;
+  // Show submenu panel only when hovering or when a section is pinned by click
+  const showSubmenu = hoveredSection !== null || pinnedSection !== null;
 
   const handleIconClick = (sectionId: string) => {
     setPinnedSection(sectionId);
