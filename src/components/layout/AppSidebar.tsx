@@ -111,15 +111,8 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const currentPath = location.pathname;
 
-  // Which section is currently pinned (clicked)
-  const [pinnedSection, setPinnedSection] = useState<string | null>(() => {
-    for (const section of navigation) {
-      if (section.items.some((item) => item.url === currentPath)) {
-        return section.id;
-      }
-    }
-    return 'issues';
-  });
+  // Which section is currently pinned (clicked). Start unpinned so submenu stays closed until user interacts.
+  const [pinnedSection, setPinnedSection] = useState<string | null>(null);
 
   // Which section is being hovered (temporary)
   const [hoveredSection, setHoveredSection] = useState<string | null>(null);
