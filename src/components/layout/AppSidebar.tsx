@@ -142,6 +142,11 @@ export function AppSidebar() {
     setHoveredSection(null);
   };
 
+  const handleCollapseClick = () => {
+    setPinnedSection(null);
+    setHoveredSection(null);
+  };
+
   const isActiveSection = (section: NavSection) => {
     return section.items.some((item) => currentPath === item.url);
   };
